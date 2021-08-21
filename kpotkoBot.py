@@ -8,7 +8,8 @@ import config
 import datetime
 from discord import utils
 import socket
-
+import urllib3
+import socketserver
 
 socket.getaddrinfo('localhost', 8080)
 
@@ -102,6 +103,19 @@ async def mess_editor(message_idy):
             print("[except] Да бляяяяя")
             await asyncio.sleep(1200)  # ждем 60 сек
             await message_edit(message_idy)
+        except socket.gaierror:
+            print("[except] Да бляяяяя")
+            await asyncio.sleep(1200)  # ждем 60 сек
+            await message_edit(message_idy)
+        except urllib3.exceptions.MaxRetryError:
+            print("[except] Да бляяяяя")
+            await asyncio.sleep(1200)  # ждем 60 сек
+            await message_edit(message_idy)
+        except urllib3.exceptions.NewConnectionError:
+            print("[except] Да бляяяяя")
+            await asyncio.sleep(1200)  # ждем 60 сек
+            await message_edit(message_idy)
+
 
 #SUPPORT FUNCTIONS
 
@@ -122,11 +136,18 @@ async def on_message(mess):
 
 async def message_edit(message_idy):
         result = time.localtime(time.time())
-        time_str=("Последнее обновление было {day}.{month}.{year} в {hours}:{min} по МСК".format(day=str(result.tm_mday),
-                                                                                             month=str(result.tm_mon),
-                                                                                             year=str(result.tm_year),
-                                                                                             hours=str(result.tm_hour),
-                                                                                             min=str(result.tm_min)))
+        if ((result.tm_hour)>20):
+            real_hour=(result.tm_hour+3)%24
+            real_days=result.tm_mday+1
+            time_str = (
+                "Последнее обновление было {day}.{month}.{year} в {hours}:{min} по МСК".format(day=str(real_days),
+                                                                                               month=str(result.tm_mon),
+                                                                                               year=str(result.tm_year),
+                                                                                               hours=str(
+                                                                                                   real_hour),
+                                                                                               min=str(result.tm_min)))
+        else:
+            time_str=("Последнее обновление было {day}.{month}.{year} в {hours}:{min} по МСК".format(day=str(result.tm_mday), month=str(result.tm_mon), year=str(result.tm_year), hours=str(result.tm_hour+3), min=str(result.tm_min)))
         new_content = str( getInfo(config.user_id, 1))+"\n \n"+str(getInfo(config.user_id, 2))+"\n \n"+str(getInfo(config.user_id, 3)+"\n \n" + time_str) #делаем сообщение из 3 последних игр
         print("[ok]new last content is loaded")
         channel = client.get_channel(config.CHANNEL_LAST_INFO_ID)
